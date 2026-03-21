@@ -89,3 +89,85 @@ npm run build && npm run deploy
 4. **Деплой** — VPS/VK Hosting
 5. **Публикация** — модерация VK
 6. **Монетизация** — VK Pay (`VKWebAppOpenPayForm`), реклама, подписки
+
+## Next.js + PostgreSQL Pattern (Backend Apps)
+
+When building apps that require a backend (multiplayer, real-time, persistent data), use Next.js instead of Vite:
+
+### Stack
+- **Next.js 14** (App Router, TypeScript) — frontend + API Routes
+- **PostgreSQL** — via Coolify Postgres service
+- **Prisma v5** (NOT v7 — breaking API changes) — ORM
+- **HTTP Polling every 2s** — simpler than WebSockets for MVP
+- **Zustand** — state management with polling logic
+
+### Setup
+```bash
+npx create-next-app@latest <app-name> --typescript --app --no-tailwind --eslint --no-src-dir --import-alias "@/*"
+npm install @vkontakte/vk-bridge @vkontakte/vkui @vkontakte/icons prisma@^5 @prisma/client@^5 zustand
+```
+
+### Prisma Singleton (lib/db.ts)
+```typescript
+import { PrismaClient } from '@prisma/client';
+
+const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | undefined };
+export const prisma = globalForPrisma.prisma ?? new PrismaClient({
+  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+});
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+```
+
+### VK Bridge (lib/vk.ts) — client-only
+```typescript
+'use client';
+import bridge from '@vkontakte/vk-bridge';
+export { bridge };
+
+export async function getVKUser() {
+  const userInfo = await bridge.send('VKWebAppGetUserInfo');
+  return userInfo;
+}
+export async function initVKBridge() {
+  await bridge.send('VKWebAppInit');
+}
+```
+
+### Polling pattern in Zustand store
+```typescript
+startPolling: (code: string) => {
+  const interval = setInterval(async () => {
+    try {
+      const res = await fetch(`/api/rooms/${code}`);
+      if (!res.ok) { clearInterval(interval); return; }
+      const data = await res.json();
+      set({ room: data });
+      // sync app state from room status
+    } catch { /* ignore silently */ }
+  }, 2000);
+  set({ pollingInterval: interval });
+},
+stopPolling: () => {
+  const { pollingInterval } = get();
+  if (pollingInterval) { clearInterval(pollingInterval); set({ pollingInterval: null }); }
+},
+```
+
+### IMPORTANT: Prisma version
+Always use `prisma@^5` NOT v7. Prisma v7 moved DATABASE_URL config to `prisma.config.ts` (breaking change).
+
+### Build script (package.json)
+```json
+"build": "prisma generate && next build"
+```
+This ensures Prisma client is generated before Next.js build even without DB connection.
+
+### Next.js API Route params (Next.js 14+ async params)
+```typescript
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ code: string }> }
+) {
+  const { code } = await params; // Must await params in Next.js 14+
+}
+```
