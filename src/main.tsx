@@ -1,13 +1,9 @@
-import bridge from '@vkontakte/vk-bridge';
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
-import { App } from './App';
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
 
-// ОБЯЗАТЕЛЬНО: вызвать до рендера — VK клиент ждёт этот сигнал в течение 30 секунд
-bridge.send('VKWebAppInit');
-
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
     <App />
-  </StrictMode>,
+  </React.StrictMode>
 );

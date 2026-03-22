@@ -1,0 +1,45 @@
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background: var(--vkui--color_background);
+  font-family: var(--vkui--font_family_base);
+}
+
+.vkuiContentSize--desktop {
+  max-width: 100%;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--vkui--color_stroke_accent);
+  border-radius: 3px;
+}
+
+/* Prevent text selection on emoji grid */
+.emoji-grid {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Smooth transitions */
+button, a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Fix for VK Mini App viewport */
+body {
+  overscroll-behavior: none;
+}
