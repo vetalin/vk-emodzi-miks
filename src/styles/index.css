@@ -10,11 +10,6 @@ html, body, #root {
   font-family: var(--vkui--font_family_base);
 }
 
-.vkuiContentSize--desktop {
-  max-width: 100%;
-}
-
-/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
 }
@@ -28,18 +23,15 @@ html, body, #root {
   border-radius: 3px;
 }
 
-/* Prevent text selection on emoji grid */
 .emoji-grid {
   -webkit-user-select: none;
   user-select: none;
 }
 
-/* Smooth transitions */
 button, a {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Fix for VK Mini App viewport */
 body {
   overscroll-behavior: none;
 }
